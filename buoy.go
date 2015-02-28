@@ -74,7 +74,7 @@ func addWatch(watcher *inotify.Watcher, path string) {
 	log.Println("Watch: ", path)
 }
 
-func Watch() {
+func Buoy() {
 	var config Config
 	_, err := toml.DecodeFile("config.tml", &config)
 	if err != nil {
@@ -111,7 +111,7 @@ func Watch() {
 		case tm := <-time.After(time.Second * 60):
 			log.Println("modify_count:", cnt, " time:" ,tm)
 			//TODO modify more flexible
-			notice_to_aws(cnt)
+			noticeToAwsFileModified(cnt)
 			cnt = 0
 		case err := <-watcher.Error:
 			log.Println("error:", err)

@@ -16,10 +16,18 @@ func getInstanceId() (instanceId string) {
 	return
 }
 
+func noticeToAwsFileModified(data int) {
+	noticeToAws("Modify File Count", "Count", float64(data))
+}
 
+func noticeToAwsDiskUse(data float64) {
+	noticeToAws("Disk Use", "Percent", data)
+}
 
-func notice_to_aws(data int) {
+func noticeToAws(metricName string, unit string, value float64) {
+	//TODO region
 	cli := cloudwatch.New(aws.IAMCreds(), "ap-northeast-1", nil)
+
 
 	dimensionParam := &cloudwatch.Dimension{
 		Name:  aws.String("InstanceId"),
@@ -28,21 +36,23 @@ func notice_to_aws(data int) {
 
 	metricDataParam := &cloudwatch.MetricDatum{
 		Dimensions: []cloudwatch.Dimension{*dimensionParam},
-		MetricName: aws.String("Modify File Count"),
-		Unit:	   aws.String("Count"),
-		Value:	  aws.Double(float64(data)),
+		MetricName: aws.String(metricName),
+		Unit:	   aws.String(unit),
+		Value:	  aws.Double(float64(value)),
 	}
 
 	putMetricDataInput := &cloudwatch.PutMetricDataInput{
 		MetricData: []cloudwatch.MetricDatum{*metricDataParam},
 		Namespace:  aws.String("Erulolo"),
 	}
-
-	fmt.Println("put metrict:", cli.PutMetricData(putMetricDataInput))
+	err := cli.PutMetricData(putMetricDataInput)
+	if err != nil {
+		fmt.Println("put metrics:", err)
+	}
 }
 
 func main() {
-	go Watch()
+	go Buoy()
+	go SwellWatch()
 	select {}
-	// notice_to_aws(1)
 }
