@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 )
 
 type Config struct {
@@ -93,6 +94,7 @@ func Watch() {
 			addWatch(watcher, target)
 		}
 	}
+	var cnt int
 	for {
 		select {
 		case ev := <-watcher.Event:
@@ -103,8 +105,14 @@ func Watch() {
 				if isIgnore(ev.Name, config.Buoy.IgnoreExtensions) != true {
 					// TODO notify this in some way.
 					log.Println("event:", ev)
+					cnt += 1
 				}
 			}
+		case tm := <-time.After(time.Second * 60):
+			log.Println("modify_count:", cnt, " time:" ,tm)
+			//TODO modify more flexible
+			notice_to_aws(cnt)
+			cnt = 0
 		case err := <-watcher.Error:
 			log.Println("error:", err)
 		}
